@@ -1,0 +1,16 @@
+filebeat.inputs:
+  - type: log
+    paths:
+      - "/var/log/nginx/access.log"
+      - "/var/log/nginx/error.log"
+    fields:
+      log_source: "nginx"
+
+  - type: log
+    paths:
+      - "/var/log/flask/*.log"
+    fields:
+      log_source: "flask"
+
+output.logstash:
+  hosts: ["logstash:5044"]
