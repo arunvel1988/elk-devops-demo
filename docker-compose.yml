@@ -9,6 +9,9 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=devops
+      - ELASTICSEARCH_USERNAME=elastic/kibana
+      - ELASTICSEARCH_PASSWORD=devops_kibana_service
+      
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     ports:
