@@ -7,7 +7,7 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - ELASTIC_USERNAME=devops
+      - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=devops
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
@@ -35,6 +35,8 @@ services:
     container_name: kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=devops
     depends_on:
       - elasticsearch
     ports:
