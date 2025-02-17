@@ -37,6 +37,8 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=devops
+      - ELASTICSEARCH_USERNAME=elastic/kibana
+      - ELASTICSEARCH_PASSWORD=devops_kibana_service
     depends_on:
       - elasticsearch
     ports:
