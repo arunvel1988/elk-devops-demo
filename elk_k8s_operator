@@ -188,6 +188,7 @@ kubectl get beat
 
 curl -u "elastic:$PASSWORD" -k "https://localhost:9200/filebeat-*/_search"
 
+curl -u "elastic:$PASSWORD" -k "https://localhost:9200/_cat/indices?v"
 
 
 
@@ -273,7 +274,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: quickstart
+  name: logstash-config
   labels:
     app.kubernetes.io/name: elasticsearch-logstash
     app.kubernetes.io/component: logstash
