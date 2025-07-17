@@ -56,7 +56,7 @@ kubectl get secret quickstart-es-elastic-user -o=jsonpath='{.data.elastic}' | ba
 
 
 
-                   apiVersion: beat.k8s.elastic.co/v1beta1
+apiVersion: beat.k8s.elastic.co/v1beta1
 kind: Beat
 metadata:
   name: quickstart
