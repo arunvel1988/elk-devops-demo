@@ -1,0 +1,95 @@
+sudo apt update && sudo apt upgrade -y
+
+echo "☕ Installing OpenJDK 11..."
+sudo apt install openjdk-11-jdk -y
+
+
+curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch |sudo gpg --dearmor -o /usr/share/keyrings/elastic.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/elastic.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
+
+sudo apt update
+
+sudo apt install elasticsearch
+
+sudo nano /etc/elasticsearch/elasticsearch.yml
+
+sudo systemctl start elasticsearch
+
+sudo systemctl enable elasticsearch
+
+curl -X GET "localhost:9200"
+
+sudo apt install kibana
+
+sudo systemctl enable kibana
+
+sudo systemctl start kibana
+
+sudo apt install logstash
+
+sudo nano /etc/logstash/conf.d/02-beats-input.conf
+
+input {
+  beats {
+    port => 5044
+  }
+}
+
+sudo nano /etc/logstash/conf.d/30-elasticsearch-output.conf
+
+output {
+  if [@metadata][pipeline] {
+	elasticsearch {
+  	hosts => ["localhost:9200"]
+  	manage_template => false
+  	index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+  	pipeline => "%{[@metadata][pipeline]}"
+	}
+  } else {
+	elasticsearch {
+  	hosts => ["localhost:9200"]
+  	manage_template => false
+  	index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+	}
+  }
+}
+
+sudo -u logstash /usr/share/logstash/bin/logstash --path.settings /etc/logstash -t
+
+sudo systemctl start logstash
+
+sudo systemctl enable logstash
+
+sudo apt install filebeat
+
+sudo nano /etc/filebeat/filebeat.yml
+
+...
+#output.elasticsearch:
+  # Array of hosts to connect to.
+  #hosts: ["localhost:9200"]
+...
+
+
+output.logstash:
+  # The Logstash hosts
+  hosts: ["localhost:5044"]
+
+sudo filebeat modules enable system
+
+sudo filebeat modules list
+
+sudo filebeat setup --pipelines --modules system
+
+sudo filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["localhost:9200"]'
+
+sudo filebeat setup -E output.logstash.enabled=false -E output.elasticsearch.hosts=['localhost:9200'] -E setup.kibana.host=localhost:5601
+
+sudo systemctl start filebeat
+
+sudo systemctl enable filebeat
+
+curl -XGET 'http://localhost:9200/filebeat-*/_search?pretty'
+
+
