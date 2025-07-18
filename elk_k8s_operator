@@ -91,7 +91,7 @@ spec:
             - equals:
                 kubernetes.namespace: "elastic-system"
     output.logstash:
-      hosts: ["logstash.logging.svc:5044"]
+      hosts: ["logstash.default.svc:5044"]
   daemonSet:
     podTemplate:
       spec:
@@ -166,7 +166,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: filebeat
-  namespace: elk-test
+  namespace: default
 roleRef:
   kind: ClusterRole
   name: filebeat
@@ -233,9 +233,9 @@ spec:
               mountPath: /usr/share/logstash/config
             - name: pipeline-volume
               mountPath: /usr/share/logstash/pipeline
-            # - name: ca-certs
-            #   mountPath: /etc/logstash/certificates
-            #   readOnly: true
+            - name: ca-certs
+              mountPath: /etc/logstash/certificates
+              readOnly: true
       volumes:
         - name: config-volume
           configMap:
@@ -243,9 +243,9 @@ spec:
         - name: pipeline-volume
           configMap:
             name: logstash-pipeline
-        # - name: ca-certs
-        #   secret:
-        #     secretName: elasticsearch-es-http-certs-public
+        - name: ca-certs
+          secret:
+            secretName: quickstart-es-http-certs-public
  
 ---
  
