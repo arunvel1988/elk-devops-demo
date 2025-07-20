@@ -54,6 +54,7 @@ services:
       - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash.yml:/usr/share/logstash/config/logstash.yml:ro
     depends_on:
       - elasticsearch
     ports:
@@ -79,6 +80,7 @@ services:
     container_name: flask_web
     volumes:
       - ./logs/flask:/app/logs
+     
     environment:
       - FLASK_ENV=development
     ports:
