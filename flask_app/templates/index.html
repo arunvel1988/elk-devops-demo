@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ELK Demo App</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to ELK Demo</h1>
+    <p>Start interacting with the app — your logs will show up in Kibana!</p>
+
+    <form id="msgForm">
+      <input type="text" name="message" placeholder="Enter a message..." required />
+      <button type="submit">Send</button>
+    </form>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('msgForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const res = await fetch('/submit', {
+        method: 'POST',
+        body: formData
+      });
+      const json = await res.json();
+      document.getElementById('result').innerText = json.message;
+    });
+  </script>
+</body>
+</html>
