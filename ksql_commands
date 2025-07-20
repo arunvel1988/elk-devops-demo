@@ -2,3 +2,20 @@ fields.log_source:flask
 
 tags : "flask_user_message" and user_message : "*hello*"
 
+client_ip : *
+
+tags : "flask_user_message" and client_ip : *
+
+client_ip : "172.20.0.3"
+
+client_ip : "172.20.0.3" and user_message : "hello" and fields.log_source : "flask"
+
+fields.log_source : "flask" and client_ip : "172.20.0.3"
+
+fields.log_source : "flask" and user_agent : "*Chrome*"
+
+fields.log_source : "flask" and (client_ip : "172.20.0.3" or client_ip : "172.20.0.4")
+
+fields.log_source : "flask" and user_message : "hello" and @timestamp >= "2025-07-20T13:00:00"
+
+fields.log_source : "flask" and not level : "INFO"
