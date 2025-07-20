@@ -1,0 +1,28 @@
+mkdir certs
+cat > certs/cert-config.yml <<EOF
+instances:
+  - name: elasticsearch
+    dns:
+      - elasticsearch
+      - localhost
+EOF
+
+
+
+docker run --rm -it \
+  -v $PWD/certs:/usr/share/elasticsearch/config/certs \
+  docker.elastic.co/elasticsearch/elasticsearch:7.10.2 \
+  bin/elasticsearch-certutil cert --silent --pem --in config/certs/cert-config.yml --out config/certs/bundle.zip
+
+
+  cd certs
+unzip bundle.zip
+cd ..
+certs/ca/ca.crt
+
+certs/elasticsearch/elasticsearch.crt
+
+certs/elasticsearch/elasticsearch.key
+
+
+  curl -k -u elastic:changeme https://localhost:9200
