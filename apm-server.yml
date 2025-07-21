@@ -1,50 +1,55 @@
-from flask import Flask, render_template, request, jsonify
-import time
-import logging
-from elasticapm.contrib.flask import ElasticAPM
 
-app = Flask(__name__)
+# apm-server.yml
 
-# Elastic APM configuration
-app.config['ELASTIC_APM'] = {
-    'SERVICE_NAME': 'flask-web-app',
-    'SECRET_TOKEN': '',
-    'SERVER_URL': 'http://apm-server:8200',
-    'ENVIRONMENT': 'development'
-}
+apm-server:
+  host: "0.0.0.0:8200"
 
-apm = ElasticAPM(app)
+output.elasticsearch:
+  hosts:
+    - "https://es01:9200"
+    - "https://es02:9200"
+    - "https://es03:9200"
+  username: "elastic"
+  password: "changeme"
+  ssl:
+    verification_mode: none
 
-# Logging configuration
-logging.basicConfig(
-    filename='logs/flask-app.log',
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s'
-)
+setup.kibana:
+  host: "https://kibana:5601"
+  ssl.verification_mode: none
 
-@app.route('/', methods=['GET'])
-def index():
-    client_ip = request.remote_addr
-    user_agent = request.headers.get('User-Agent')
-    logging.info(f"GET request from {client_ip} - {user_agent}")
-    return render_template("index.html")
+logging:
+  level: info
+  to_files: true
+  files:
+    path: /var/log/apm-server
+    name: apm-server.log
+    keepfiles: 7
+    permissions: 0644
 
-@app.route('/submit', methods=['POST'])
-def submit():
-    data = request.form.get('message')
-    client_ip = request.remote_addr
-    user_agent = request.headers.get('User-Agent')
-    logging.info(f"POST from {client_ip}: {data} - {user_agent}")
-    return jsonify({"status": "success", "message": "Received!"})
+monitoring:
+  enabled: true
+  elasticsearch:
+    hosts:
+      - "https://es01:9200"
+      - "https://es02:9200"
+      - "https://es03:9200"
+    username: "elastic"
+    password: "changeme"
+    ssl:
+      verification_mode: none
 
-@app.route('/error')
-def generate_error():
-    raise RuntimeError("This is a test error for APM.")
+# Optional: Retry configuration for HA resilience
+queue:
+  mem:
+    events: 4096
 
-@app.route('/slow')
-def slow_response():
-    time.sleep(5)
-    return "This was a slow request"
+output:
+  elasticsearch:
+    worker: 1
+    bulk_max_size: 50
+    compression_level: 3
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+# Optional: Add APM Server secret token if using token auth
+# apm-server:
+#   secret_token: "your_secret_token_here"
