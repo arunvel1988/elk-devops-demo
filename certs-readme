@@ -7,7 +7,7 @@ instances:
       - localhost
 EOF
 
-
+chmod go-w apm-server.yml
 
 docker run --rm -it \
   -v $PWD/certs:/usr/share/elasticsearch/config/certs \
