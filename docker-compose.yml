@@ -1,44 +1,151 @@
 version: "3.7"
 
 services:
-  elasticsearch:
+
+  elasticsearch1:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-    container_name: elasticsearch
+    container_name: es01
     environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - node.name=es01
+      - cluster.name=es-cluster
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es02,es03
+      - node.roles=master,data,ingest
+      - network.host=0.0.0.0
+      - ELASTIC_PASSWORD=changeme
+      - xpack.security.enabled=true
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
     volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      - esdata1:/usr/share/elasticsearch/data
+      - ./certs:/usr/share/elasticsearch/config/certs
     ports:
       - "9200:9200"
     networks:
-      - elk_network
+      - elk
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.10.2
-    container_name: logstash
-    volumes:
-      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: es02
     environment:
-      - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
-    depends_on:
-      - elasticsearch
-    ports:
-      - "5044:5044"
+      - node.name=es02
+      - cluster.name=es-cluster
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es03
+      - node.roles=master,data,ingest
+      - network.host=0.0.0.0
+      - ELASTIC_PASSWORD=changeme
+      - xpack.security.enabled=true
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+    volumes:
+      - esdata2:/usr/share/elasticsearch/data
+      - ./certs:/usr/share/elasticsearch/config/certs
     networks:
-      - elk_network
+      - elk
+
+  elasticsearch3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: es03
+    environment:
+      - node.name=es03
+      - cluster.name=es-cluster
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02
+      - node.roles=master,data,ingest
+      - network.host=0.0.0.0
+      - ELASTIC_PASSWORD=changeme
+      - xpack.security.enabled=true
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+    volumes:
+      - esdata3:/usr/share/elasticsearch/data
+      - ./certs:/usr/share/elasticsearch/config/certs
+    networks:
+      - elk
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.10.2
     container_name: kibana
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
+      - ELASTICSEARCH_HOSTS=["https://es01:9200","https://es02:9200","https://es03:9200"]
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=changeme
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=none
+      - SERVER_SSL_ENABLED=true
+      - SERVER_SSL_CERTIFICATE=/usr/share/kibana/config/certs/elasticsearch/elasticsearch.crt
+      - SERVER_SSL_KEY=/usr/share/kibana/config/certs/elasticsearch/elasticsearch.key
+    volumes:
+      - ./certs:/usr/share/kibana/config/certs
     ports:
       - "5601:5601"
+    depends_on:
+      - elasticsearch1
+      - elasticsearch2
+      - elasticsearch3
     networks:
-      - elk_network
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.2
+    container_name: logstash
+    environment:
+      - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    depends_on:
+      - elasticsearch1
+    ports:
+      - "5044:5044"
+    networks:
+      - elk
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.10.2
+    container_name: filebeat
+    user: root
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs/nginx:/var/log/nginx
+      - ./logs/flask:/var/log/flask
+    depends_on:
+      - logstash
+    networks:
+      - elk
+
+  flask_app:
+    build: ./flask_app
+    container_name: flask_web
+    volumes:
+      - ./logs/flask:/app/logs
+    environment:
+      - FLASK_ENV=development
+    ports:
+      - "5000:5000"
+    networks:
+      - web
 
   nginx:
     image: nginx:latest
@@ -51,39 +158,17 @@ services:
     depends_on:
       - flask_app
     networks:
-      - web_network
-
-  flask_app:
-    build: ./flask_app
-    container_name: flask_web
-    volumes:
-      - ./logs/flask:/app/logs
-    environment:
-      - FLASK_ENV=development
-    ports:
-      - "5000:5000"
-    networks:
-      - web_network
-
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:7.10.2
-    container_name: filebeat
-    volumes:
-      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - ./logs/nginx:/var/log/nginx
-      - ./logs/flask:/var/log/flask
-    depends_on:
-      - logstash
-    networks:
-      - elk_network
-      - web_network
+      - web
 
 networks:
-  elk_network:
+  elk:
     driver: bridge
-  web_network:
+  web:
     driver: bridge
 
 volumes:
   elasticsearch_data:
     driver: local
+  esdata1:
+  esdata2:
+  esdata3:
