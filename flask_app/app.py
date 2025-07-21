@@ -1,10 +1,21 @@
 from flask import Flask, render_template, request, jsonify
-from datetime import datetime
+import time
 import logging
+from elasticapm.contrib.flask import ElasticAPM
 
 app = Flask(__name__)
 
-# Configure logging to file (Filebeat will pick this up)
+# Elastic APM configuration
+app.config['ELASTIC_APM'] = {
+    'SERVICE_NAME': 'flask-web-app',
+    'SECRET_TOKEN': '',
+    'SERVER_URL': 'http://apm-server:8200',
+    'ENVIRONMENT': 'development'
+}
+
+apm = ElasticAPM(app)
+
+# Logging configuration
 logging.basicConfig(
     filename='logs/flask-app.log',
     level=logging.INFO,
@@ -25,6 +36,15 @@ def submit():
     user_agent = request.headers.get('User-Agent')
     logging.info(f"POST from {client_ip}: {data} - {user_agent}")
     return jsonify({"status": "success", "message": "Received!"})
+
+@app.route('/error')
+def generate_error():
+    raise RuntimeError("This is a test error for APM.")
+
+@app.route('/slow')
+def slow_response():
+    time.sleep(5)
+    return "This was a slow request"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
