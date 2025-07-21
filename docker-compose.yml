@@ -135,6 +135,21 @@ services:
     networks:
       - elk
 
+
+    apm-server:
+    image: docker.elastic.co/apm/apm-server:7.10.2
+    container_name: apm-server
+    depends_on:
+      - elasticsearch1
+      - kibana
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    networks:
+      - elk
+
+
   flask_app:
     build: ./flask_app
     container_name: flask_web
