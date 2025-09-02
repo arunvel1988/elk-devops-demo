@@ -1,0 +1,79 @@
+version: "3.7"
+
+services:
+  grafana:
+    image: grafana/grafana:10.0.1
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_LOG_LEVEL=info
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+    networks:
+      - grafana_network
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    networks:
+      - grafana_network
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+      - ./logs/nginx:/var/log/nginx
+      - ./logs/flask:/var/log/flask
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - grafana_network
+      - web_network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_server
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs/nginx:/var/log/nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - flask_app
+    networks:
+      - web_network
+      - grafana_network
+
+  flask_app:
+    build: ./flask_app
+    container_name: flask_web
+    volumes:
+      - ./logs/flask:/app/logs
+    environment:
+      - FLASK_ENV=development
+    ports:
+      - "5000:5000"
+    networks:
+      - web_network
+      - grafana_network
+
+networks:
+  grafana_network:
+    driver: bridge
+  web_network:
+    driver: bridge
+
+volumes:
+  grafana_data:
+    driver: local
