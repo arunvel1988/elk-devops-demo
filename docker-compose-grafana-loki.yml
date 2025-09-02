@@ -24,6 +24,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
     ports:
       - "3100:3100"
     networks:
@@ -37,6 +38,8 @@ services:
       - ./logs/nginx:/var/log/nginx
       - ./logs/flask:/var/log/flask
     command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
     networks:
       - grafana_network
       - web_network
@@ -76,4 +79,6 @@ networks:
 
 volumes:
   grafana_data:
+    driver: local
+  loki_data:
     driver: local
