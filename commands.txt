@@ -88,3 +88,14 @@ sum(rate({job="flask"} |= "ERROR" [5m]))
 
 #############################################################################################################
 
+request http status code  = sum by (status) (rate({job="nginx"}[1m]))
+
+top requested endpoints = topk(5, count_over_time({job="nginx"} |~ "\\s(POST|GET|PUT|DELETE)\\s+[\\w/]+" [5m]))
+
+quantile_over_time(0.95, {job="nginx"} | regexp "(?P<latency>[0-9.]+)$" [5m]) = 95th Percentile Request Latency (if you log response time)
+
+Slow API Endpoints (if you log execution time) = topk(5, avg_over_time({job="flask"} | regexp "endpoint=(?P<endpoint>\\S+) time=(?P<time>[0-9.]+)" [5m]))
+
+
+
+
