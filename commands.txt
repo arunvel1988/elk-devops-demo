@@ -97,5 +97,13 @@ quantile_over_time(0.95, {job="nginx"} | regexp "(?P<latency>[0-9.]+)$" [5m]) = 
 Slow API Endpoints (if you log execution time) = topk(5, avg_over_time({job="flask"} | regexp "endpoint=(?P<endpoint>\\S+) time=(?P<time>[0-9.]+)" [5m]))
 
 
+topk(3, count_over_time({job="flask"} |= "ERROR" | regexp "user_id=(?P<uid>\\d+)" [10m])) = User ID causing most errors (if logged)
+
+sum(rate({job="nginx"} |= "500" [1m])) 
+/ 
+sum(rate({job="flask"} |= "ERROR" [1m]))
+ = Correlation of Nginx 500s with Flask Errors
+
+################################################################################
 
 
