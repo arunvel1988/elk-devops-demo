@@ -12,3 +12,79 @@ sudo chmod -R 775 ./loki_data
 
 
 
+
+#################################################################################
+{job="flask"}
+
+{job="nginx"}
+
+
+{job="flask"} |= "GET"
+
+{job="flask"} |= "ERROR"
+
+{job="flask"} |~ "5.."
+
+sum(rate({job="flask"}[5m]))
+
+
+sum(rate({job="flask"} |= "ERROR" [5m]))
+
+###############################################################################################
+
+
+{
+  "id": null,
+  "title": "E-commerce Logs Dashboard",
+  "uid": "ecomm-logs",
+  "version": 1,
+  "schemaVersion": 39,
+  "tags": ["loki", "nginx", "flask", "logs"],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Nginx Request Rate",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate({job=\"nginx\"}[1m]))",
+          "legendFormat": "Requests per sec",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Flask Error Count",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate({job=\"flask\"} |= \"ERROR\" [1m]))",
+          "legendFormat": "Errors per sec",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Latest Log Lines",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "maxLines": 10
+      },
+      "targets": [
+        {
+          "expr": "{job=~\"nginx|flask\"}",
+          "refId": "C"
+        }
+      ]
+    }
+  ]
+}
+
+#############################################################################################################
+
