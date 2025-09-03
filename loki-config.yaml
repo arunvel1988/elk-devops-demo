@@ -32,6 +32,10 @@ storage_config:
   filesystem:
     directory: /loki/chunks
 
+compactor:                 # 👈 Add this block
+  working_directory: /loki/compactor
+  shared_store: filesystem
+
 limits_config:
   enforce_metric_name: false
   reject_old_samples: true
