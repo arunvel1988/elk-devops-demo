@@ -4,6 +4,7 @@ docker-compose -f docker-compose-grafana-loki.yml down --remove-orphans
 mkdir -p ./loki_data/index
 mkdir -p ./loki_data/cache
 mkdir -p ./loki_data/chunks
+mkdir -p ./loki_data/compactor
 mkdir -p ./loki_data/wal
 
 sudo chown -R 10001:10001 ./loki_data
