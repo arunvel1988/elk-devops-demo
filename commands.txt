@@ -1,4 +1,4 @@
-docker-compose -f docker-compose-grafana-loki.yml
+docker-compose -f docker-compose-grafana-loki.yml up
 docker-compose -f docker-compose-grafana-loki.yml down --remove-orphans
 
 mkdir -p ./loki_data/index
